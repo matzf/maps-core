@@ -93,6 +93,12 @@ gpc_op PolygonHelper::gpcOperationFrom(const ClippingOperation operation) {
             return GPC_UNION;
         case XOR:
             return GPC_XOR;
+        default:
+#if __cplusplus >= 202302L
+            std::unreachable();
+#else
+            __builtin_unreachable();
+#endif
     }
 }
 

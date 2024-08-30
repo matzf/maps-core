@@ -189,7 +189,7 @@ void IconLayer::setupIconObjects(
         return;
     }
 
-    for (const auto iconPair : iconObjects) {
+    for (const auto &iconPair : iconObjects) {
         const auto &icon = iconPair.first;
         const auto &iconObject = iconPair.second;
 

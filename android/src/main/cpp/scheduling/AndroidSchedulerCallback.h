@@ -14,6 +14,7 @@
 
 #include "jni.h"
 
+// TODO(matzf): rename to JNISchedulerCallback?
 class AndroidSchedulerCallback : public ThreadPoolCallbacks {
 public:
     AndroidSchedulerCallback();

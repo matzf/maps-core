@@ -11,6 +11,7 @@
 #include "ColorLineGroup2dShaderOpenGl.h"
 #include "OpenGlContext.h"
 #include "OpenGlHelper.h"
+#include <cstring>
 
 ColorLineGroup2dShaderOpenGl::ColorLineGroup2dShaderOpenGl() {
     lineValues.resize(sizeLineValuesArray);

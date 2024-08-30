@@ -44,6 +44,8 @@
 #include "ValueKeys.h"
 #include <mutex>
 #include <iomanip>
+#include <memory>
+#include <utility>
 
 
 namespace std {
@@ -405,12 +407,6 @@ public:
         return alternative;
     }
 
-    template<>
-    Vec2F evaluateOr(const EvaluationContext &context, const Vec2F &alternative) const {
-        auto const &value = evaluateOr(context, std::vector<float>{ alternative.x, alternative.y });
-        return Vec2F(value[0], value[1]);
-    }
-
     std::optional<::Anchor> anchorFromString(const std::string &value) const {
         if (value == "center") {
             return Anchor::CENTER;
@@ -509,76 +505,6 @@ public:
         return std::nullopt;
     }
 
-    template<>
-    BlendMode evaluateOr(const EvaluationContext &context, const BlendMode &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto blendMode = blendModeFromString(value);
-        if (blendMode) {
-            return *blendMode;
-        }
-        return alternative;
-    }
-
-    template<>
-    SymbolZOrder evaluateOr(const EvaluationContext &context, const SymbolZOrder &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto symbolZOrder = symbolZOrderFromString(value);
-        if (symbolZOrder) {
-            return *symbolZOrder;
-        }
-        return alternative;
-    }
-
-    template<>
-    Anchor evaluateOr(const EvaluationContext &context, const Anchor &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto anchor = anchorFromString(value);
-        if (anchor) {
-            return *anchor;
-        }
-        return alternative;
-    }
-
-    template<>
-    SymbolAlignment evaluateOr(const EvaluationContext &context, const SymbolAlignment &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto alignment = alignmentFromString(value);
-        if (alignment) {
-            return *alignment;
-        }
-        return alternative;
-    }
-
-    template<>
-    IconTextFit evaluateOr(const EvaluationContext &context, const IconTextFit &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto textFit = iconTextFitFromString(value);
-        if (textFit) {
-            return *textFit;
-        }
-        return alternative;
-    }
-
-    template<>
-    TextJustify evaluateOr(const EvaluationContext &context, const TextJustify &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto anchor = justifyFromString(value);
-        if (anchor) {
-            return *anchor;
-        }
-        return alternative;
-    }
-
-    template<>
-    TextSymbolPlacement evaluateOr(const EvaluationContext &context, const TextSymbolPlacement &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto placement = textSymbolPlacementFromString(value);
-        if (placement) {
-            return *placement;
-        }
-        return alternative;
-    }
-
     std::optional<LineCapType> capTypeFromString(const std::string &value) const {
         if (value == "butt") {
             return LineCapType::BUTT;
@@ -593,16 +519,6 @@ public:
         return std::nullopt;
     }
 
-    template<>
-    LineCapType evaluateOr(const EvaluationContext &context, const LineCapType &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto type = capTypeFromString(value);
-        if (type) {
-            return *type;
-        }
-        return alternative;
-    }
-
     std::optional<TextTransform> textTransformFromString(const std::string &value) const {
         if (value == "none") {
             return TextTransform::NONE;
@@ -611,34 +527,122 @@ public:
         }
         return std::nullopt;
     }
-
-    template<>
-    TextTransform evaluateOr(const EvaluationContext &context, const TextTransform &alternative) const {
-        auto const &value = evaluateOr(context, std::string(""));
-        auto type = textTransformFromString(value);
-        if (type) {
-            return *type;
-        }
-        return alternative;
-    }
-
-    template<>
-    std::vector<Anchor> evaluateOr(const EvaluationContext &context, const std::vector<Anchor> &alternative) const {
-        auto const &values = evaluateOr(context, std::vector<std::string>());
-        std::vector<Anchor> result;
-        for (auto const &value: values) {
-            auto anchor = anchorFromString(value);
-            if (anchor) {
-                result.push_back(*anchor);
-            }
-        }
-        if (!result.empty()) {
-            return result;
-        }
-        return alternative;
-    }
-
 };
+
+// XXX(matzf): moved out of class scope. Template specialization in class scope _should_ be allowed in C++ since Defect Report CWG 727. But GCC still rejects it (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282).
+template<>
+inline Vec2F Value::evaluateOr(const EvaluationContext &context, const Vec2F &alternative) const {
+    auto const &value = evaluateOr(context, std::vector<float>{ alternative.x, alternative.y });
+    return Vec2F(value[0], value[1]);
+}
+
+template<>
+inline BlendMode Value::evaluateOr(const EvaluationContext &context, const BlendMode &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto blendMode = blendModeFromString(value);
+    if (blendMode) {
+        return *blendMode;
+    }
+    return alternative;
+}
+
+template<>
+inline SymbolZOrder Value::evaluateOr(const EvaluationContext &context, const SymbolZOrder &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto symbolZOrder = symbolZOrderFromString(value);
+    if (symbolZOrder) {
+        return *symbolZOrder;
+    }
+    return alternative;
+}
+
+template<>
+inline Anchor Value::evaluateOr(const EvaluationContext &context, const Anchor &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto anchor = anchorFromString(value);
+    if (anchor) {
+        return *anchor;
+    }
+    return alternative;
+}
+
+template<>
+inline SymbolAlignment Value::evaluateOr(const EvaluationContext &context, const SymbolAlignment &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto alignment = alignmentFromString(value);
+    if (alignment) {
+        return *alignment;
+    }
+    return alternative;
+}
+
+template<>
+inline IconTextFit Value::evaluateOr(const EvaluationContext &context, const IconTextFit &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto textFit = iconTextFitFromString(value);
+    if (textFit) {
+        return *textFit;
+    }
+    return alternative;
+}
+
+template<>
+inline TextJustify Value::evaluateOr(const EvaluationContext &context, const TextJustify &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto anchor = justifyFromString(value);
+    if (anchor) {
+        return *anchor;
+    }
+    return alternative;
+}
+
+template<>
+inline TextSymbolPlacement Value::evaluateOr(const EvaluationContext &context, const TextSymbolPlacement &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto placement = textSymbolPlacementFromString(value);
+    if (placement) {
+        return *placement;
+    }
+    return alternative;
+}
+
+
+template<>
+inline LineCapType Value::evaluateOr(const EvaluationContext &context, const LineCapType &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto type = capTypeFromString(value);
+    if (type) {
+        return *type;
+    }
+    return alternative;
+}
+
+template<>
+inline TextTransform Value::evaluateOr(const EvaluationContext &context, const TextTransform &alternative) const {
+    auto const &value = evaluateOr(context, std::string(""));
+    auto type = textTransformFromString(value);
+    if (type) {
+        return *type;
+    }
+    return alternative;
+}
+
+template<>
+inline std::vector<Anchor> Value::evaluateOr(const EvaluationContext &context, const std::vector<Anchor> &alternative) const {
+    auto const &values = evaluateOr(context, std::vector<std::string>());
+    std::vector<Anchor> result;
+    for (auto const &value: values) {
+        auto anchor = anchorFromString(value);
+        if (anchor) {
+            result.push_back(*anchor);
+        }
+    }
+    if (!result.empty()) {
+        return result;
+    }
+    return alternative;
+}
+
 
 template<class ResultType>
 class ValueEvaluator {
@@ -1554,10 +1558,10 @@ public:
                     return !val.empty();
                 },
                 [](double val){
-                    return val != 0.0 && !isnan(val);
+                    return val != 0.0 && !std::isnan(val);
                 },
                 [](int64_t val){
-                    return val != 0 && !isnan(val);
+                    return val != 0 && !std::isnan(val);
                 },
                 [](bool val){
                     return val;
@@ -1846,6 +1850,12 @@ public:
                 return std::make_unique<LogOpValue>(logOpType, lhs->clone(), rhs->clone());
             case LogOpType::NOT:
                 return std::make_unique<LogOpValue>(logOpType, lhs->clone());
+            default:
+#if __cplusplus >= 202302L
+                std::unreachable();
+#else
+                __builtin_unreachable();
+#endif
         }
     }
 
@@ -1871,6 +1881,12 @@ public:
                 return lhs->evaluateOr(context, false) || (rhs && rhs->evaluateOr(context, false));
             case LogOpType::NOT:
                 return !lhs->evaluateOr(context, false);
+            default:
+#if __cplusplus >= 202302L
+                std::unreachable();
+#else
+                __builtin_unreachable();
+#endif
         }
     };
 
@@ -1903,10 +1919,10 @@ private:
 
 class AllValue: public Value {
 public:
-    AllValue(const std::vector<const std::shared_ptr<Value>> values) : values(values) {}
+    AllValue(const std::vector<std::shared_ptr<Value>> values) : values(values) {}
 
     std::unique_ptr<Value> clone() override {
-        std::vector<const std::shared_ptr<Value>> clonedValues;
+        std::vector<std::shared_ptr<Value>> clonedValues;
         for (const auto &value : values) {
             clonedValues.push_back(value->clone());
         }
@@ -1952,15 +1968,15 @@ public:
 
 
 private:
-    const std::vector<const std::shared_ptr<Value>> values;
+    const std::vector<std::shared_ptr<Value>> values;
 };
 
 class AnyValue: public Value {
 public:
-    AnyValue(const std::vector<const std::shared_ptr<Value>> values) : values(values) {}
+    AnyValue(const std::vector<std::shared_ptr<Value>> values) : values(values) {}
 
     std::unique_ptr<Value> clone() override {
-        std::vector<const std::shared_ptr<Value>> clonedValues;
+        std::vector<std::shared_ptr<Value>> clonedValues;
         for (const auto &value : values) {
             clonedValues.push_back(value->clone());
         }
@@ -2005,7 +2021,7 @@ public:
     }
 
 private:
-    const std::vector<const std::shared_ptr<Value>> values;
+    const std::vector<std::shared_ptr<Value>> values;
 };
 
 class PropertyCompareValue: public Value {
@@ -2472,6 +2488,12 @@ public:
                 return std::fmod(lhsValue, rhsValue);
             case MathOperation::POWER:
                 return std::pow(lhsValue,  rhsValue);
+            default:
+#if __cplusplus >= 202302L
+                std::unreachable();
+#else
+                __builtin_unreachable();
+#endif
         }
     };
 
