@@ -11,6 +11,8 @@
 #include "MapScene.h"
 #ifdef __linux__
 #include "ThreadPoolSchedulerImpl.h"
+#endif
+#if 0 && defined( __linux__)
 #include "AndroidSchedulerCallback.h"
 #endif
 
@@ -25,8 +27,19 @@ std::shared_ptr<MapInterface> MapInterface::create(const std::shared_ptr<::Graph
 
 std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &mapConfig,
                                                              float pixelDensity) {
-#ifdef __linux__
+#if 0 && defined( __linux__)
     auto scheduler = std::make_shared<ThreadPoolSchedulerImpl>(std::make_shared<AndroidSchedulerCallback>());
+    return std::make_shared<MapScene>(SceneInterface::createWithOpenGl(), mapConfig, scheduler, pixelDensity);
+#else
+    return nullptr;
+#endif
+}
+
+std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &mapConfig,
+                                                             float pixelDensity,
+                                                             std::shared_ptr<::ThreadPoolCallbacks> &callbacks) {
+#ifdef __linux__
+    auto scheduler = std::make_shared<ThreadPoolSchedulerImpl>(callbacks);
     return std::make_shared<MapScene>(SceneInterface::createWithOpenGl(), mapConfig, scheduler, pixelDensity);
 #else
     return nullptr;
