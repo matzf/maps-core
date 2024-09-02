@@ -12,7 +12,7 @@
 #ifdef __linux__
 #include "ThreadPoolSchedulerImpl.h"
 #endif
-#if 0 && defined( __linux__)
+#if __ANDROID__
 #include "AndroidSchedulerCallback.h"
 #endif
 
@@ -27,21 +27,23 @@ std::shared_ptr<MapInterface> MapInterface::create(const std::shared_ptr<::Graph
 
 std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &mapConfig,
                                                              float pixelDensity) {
-#if 0 && defined( __linux__)
+#if __ANDROID__
     auto scheduler = std::make_shared<ThreadPoolSchedulerImpl>(std::make_shared<AndroidSchedulerCallback>());
     return std::make_shared<MapScene>(SceneInterface::createWithOpenGl(), mapConfig, scheduler, pixelDensity);
-#else
-    return nullptr;
-#endif
-}
-
-std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &mapConfig,
-                                                             float pixelDensity,
-                                                             std::shared_ptr<::ThreadPoolCallbacks> &callbacks) {
-#ifdef __linux__
-    auto scheduler = std::make_shared<ThreadPoolSchedulerImpl>(callbacks);
+#elif __linux__
+    // FIXME -- this seems to be the wrong place for this; we should set the scheduler from outside, otherwise we have to make this library depend on JNI.
+    struct NopThreadPoolCallbacks : ThreadPoolCallbacks {
+        ~NopThreadPoolCallbacks() = default;
+        std::string getCurrentThreadName() override { return ""; };
+        void setCurrentThreadName(const std::string &name) override {}
+        void setThreadPriority(TaskPriority priority) override {}
+        void attachThread() override {}
+        void detachThread() override {}
+    };
+    auto scheduler = std::make_shared<ThreadPoolSchedulerImpl>(std::make_shared<NopThreadPoolCallbacks>());
     return std::make_shared<MapScene>(SceneInterface::createWithOpenGl(), mapConfig, scheduler, pixelDensity);
 #else
+    // "not-null
     return nullptr;
 #endif
 }
