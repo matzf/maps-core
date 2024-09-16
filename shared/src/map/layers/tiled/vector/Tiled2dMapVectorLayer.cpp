@@ -580,7 +580,6 @@ void Tiled2dMapVectorLayer::update() {
         bool tilesChanged = !tilesStillValid.test_and_set();
         double zoomChange = std::abs(newZoom-lastDataManagerZoom) / std::max(newZoom, 1.0);
         double timeDiff = now - lastDataManagerUpdate;
-        printf("zoomChange > 0.001 == %i || timeDiff > 1000 == %i || isAnimating == %i || tilesChanged == %i\n", zoomChange > 0.001 , timeDiff > 1000 , isAnimating , tilesChanged);
         if (zoomChange > 0.001 || timeDiff > 1000 || isAnimating || tilesChanged) {
             lastDataManagerUpdate = now;
             lastDataManagerZoom = newZoom;
@@ -600,20 +599,15 @@ void Tiled2dMapVectorLayer::update() {
             }
             isAnimating = newIsAnimating;
             if (now - lastCollitionCheck > 1000 || tilesChanged || zoomChange > 0.001) {
-                printf("doing collision check\n");
                 lastCollitionCheck = now;
                 bool enforceUpdate = !prevCollisionStillValid.test_and_set();
                 collisionManager.syncAccess(
                         [&vpMatrix, &viewportSize, viewportRotation, enforceUpdate, persistingPlacement = this->persistingSymbolPlacement](
                                 const auto &manager) {
-                            printf("manager->collisionDetection\n");
                             manager->collisionDetection(*vpMatrix, viewportSize, viewportRotation, enforceUpdate,
                                                         persistingPlacement);
-                            printf("manager->collisionDetection DONE\n");
                         });
                 isAnimating = true;
-            } else {
-                printf("NOT doing collision check. tilesChanged %i\n", tilesChanged);
             }
         }
 
