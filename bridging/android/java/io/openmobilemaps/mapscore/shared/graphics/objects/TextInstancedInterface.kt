@@ -43,7 +43,7 @@ abstract class TextInstancedInterface {
 
     abstract fun asGraphicsObject(): GraphicsObjectInterface
 
-    private class CppProxy : TextInstancedInterface {
+    public class CppProxy : TextInstancedInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

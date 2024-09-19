@@ -12,7 +12,7 @@ abstract class MaskingObjectInterface {
 
     abstract fun renderAsMask(context: io.openmobilemaps.mapscore.shared.graphics.RenderingContextInterface, renderPass: io.openmobilemaps.mapscore.shared.graphics.RenderPassConfig, mvpMatrix: Long, screenPixelAsRealMeterFactor: Double)
 
-    private class CppProxy : MaskingObjectInterface {
+    public class CppProxy : MaskingObjectInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

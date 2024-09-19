@@ -18,7 +18,7 @@ abstract class ThreadPoolCallbacks {
 
     abstract fun detachThread()
 
-    private class CppProxy : ThreadPoolCallbacks {
+    public class CppProxy : ThreadPoolCallbacks {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

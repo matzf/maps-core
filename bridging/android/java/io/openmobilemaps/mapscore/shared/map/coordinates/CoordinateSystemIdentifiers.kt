@@ -28,7 +28,7 @@ abstract class CoordinateSystemIdentifiers {
         external fun fromCrsIdentifier(identifier: String): Int
     }
 
-    private class CppProxy : CoordinateSystemIdentifiers {
+    public class CppProxy : CoordinateSystemIdentifiers {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

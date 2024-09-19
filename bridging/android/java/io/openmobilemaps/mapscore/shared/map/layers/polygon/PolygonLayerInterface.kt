@@ -33,7 +33,7 @@ abstract class PolygonLayerInterface {
 
     abstract fun setLayerClickable(isLayerClickable: Boolean)
 
-    private class CppProxy : PolygonLayerInterface {
+    public class CppProxy : PolygonLayerInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

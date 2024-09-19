@@ -10,7 +10,7 @@ abstract class PolygonLayerCallbackInterface {
 
     abstract fun onClickConfirmed(polygon: PolygonInfo)
 
-    private class CppProxy : PolygonLayerCallbackInterface {
+    public class CppProxy : PolygonLayerCallbackInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

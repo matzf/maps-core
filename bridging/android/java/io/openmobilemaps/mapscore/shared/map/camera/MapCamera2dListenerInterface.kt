@@ -14,7 +14,7 @@ abstract class MapCamera2dListenerInterface {
 
     abstract fun onMapInteraction()
 
-    private class CppProxy : MapCamera2dListenerInterface {
+    public class CppProxy : MapCamera2dListenerInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

@@ -19,7 +19,7 @@ abstract class CoordinateSystemFactory {
         external fun getEpsg21781System(): MapCoordinateSystem
     }
 
-    private class CppProxy : CoordinateSystemFactory {
+    public class CppProxy : CoordinateSystemFactory {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

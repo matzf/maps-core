@@ -28,7 +28,7 @@ abstract class GraphicsObjectInterface {
 
     abstract fun render(context: io.openmobilemaps.mapscore.shared.graphics.RenderingContextInterface, renderPass: io.openmobilemaps.mapscore.shared.graphics.RenderPassConfig, mvpMatrix: Long, isMasked: Boolean, screenPixelAsRealMeterFactor: Double)
 
-    private class CppProxy : GraphicsObjectInterface {
+    public class CppProxy : GraphicsObjectInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

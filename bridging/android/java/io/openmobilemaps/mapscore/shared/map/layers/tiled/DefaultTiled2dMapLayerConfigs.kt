@@ -13,7 +13,7 @@ abstract class DefaultTiled2dMapLayerConfigs {
         external fun webMercator(layerName: String, urlFormat: String): Tiled2dMapLayerConfig
     }
 
-    private class CppProxy : DefaultTiled2dMapLayerConfigs {
+    public class CppProxy : DefaultTiled2dMapLayerConfigs {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

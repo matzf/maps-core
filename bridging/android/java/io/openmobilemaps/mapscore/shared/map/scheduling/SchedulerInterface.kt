@@ -31,7 +31,7 @@ abstract class SchedulerInterface {
 
     abstract fun getThreadPoolCallbacks(): ThreadPoolCallbacks
 
-    private class CppProxy : SchedulerInterface {
+    public class CppProxy : SchedulerInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

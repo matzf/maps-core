@@ -32,7 +32,7 @@ abstract class ShaderFactoryInterface {
 
     abstract fun createStretchInstancedShader(): StretchInstancedShaderInterface
 
-    private class CppProxy : ShaderFactoryInterface {
+    public class CppProxy : ShaderFactoryInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

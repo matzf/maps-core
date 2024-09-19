@@ -94,7 +94,7 @@ abstract class MapCamera2dInterface {
 
     abstract fun getLastVpMatrixZoom(): Float?
 
-    private class CppProxy : MapCamera2dInterface {
+    public class CppProxy : MapCamera2dInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

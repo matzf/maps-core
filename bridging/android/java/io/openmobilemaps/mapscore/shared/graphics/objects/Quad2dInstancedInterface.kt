@@ -30,7 +30,7 @@ abstract class Quad2dInstancedInterface {
 
     abstract fun asMaskingObject(): MaskingObjectInterface
 
-    private class CppProxy : Quad2dInstancedInterface {
+    public class CppProxy : Quad2dInstancedInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 

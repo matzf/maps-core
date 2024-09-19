@@ -49,7 +49,7 @@ abstract class Tiled2dMapRasterLayerInterface {
 
     abstract fun getConfig(): io.openmobilemaps.mapscore.shared.map.layers.tiled.Tiled2dMapLayerConfig
 
-    private class CppProxy : Tiled2dMapRasterLayerInterface {
+    public class CppProxy : Tiled2dMapRasterLayerInterface {
         private val nativeRef: Long
         private val destroyed: AtomicBoolean = AtomicBoolean(false)
 
