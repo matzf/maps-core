@@ -11,6 +11,8 @@
 #include "MapScene.h"
 #ifdef __linux__
 #include "ThreadPoolSchedulerImpl.h"
+#include "sys/prctl.h"
+#include "sys/resource.h"
 #endif
 #if __ANDROID__
 #include "AndroidSchedulerCallback.h"
@@ -34,9 +36,34 @@ std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &ma
     // FIXME -- this seems to be the wrong place for this; we should set the scheduler from outside, otherwise we have to make this library depend on JNI.
     struct NopThreadPoolCallbacks : ThreadPoolCallbacks {
         ~NopThreadPoolCallbacks() = default;
-        std::string getCurrentThreadName() override { return ""; };
-        void setCurrentThreadName(const std::string &name) override {}
-        void setThreadPriority(TaskPriority priority) override {}
+        std::string getCurrentThreadName() override {
+            char name[32] = "";
+            prctl(PR_GET_NAME, name);
+            return name;
+        }
+
+        void setCurrentThreadName(const std::string &name) override {
+            prctl(PR_SET_NAME, name.c_str());
+        }
+        void setThreadPriority(TaskPriority priority) override {
+          int p = 0;
+          switch (priority) {
+              case TaskPriority::HIGH:
+                  // THREAD_PRIORITY_FOREGROUND
+                  p = -2;
+                  break;
+              case TaskPriority::NORMAL:
+                  // THREAD_PRIORITY_DEFAULT
+                  p = 0;
+                  break;
+              case TaskPriority::LOW:
+                  // THREAD_PRIORITY_BACKGROUND
+                  p = 10;
+                  break;
+          }
+          setpriority(PRIO_PROCESS, 0, p);
+        }
+
         void attachThread() override {}
         void detachThread() override {}
     };
