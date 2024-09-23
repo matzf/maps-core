@@ -10,6 +10,7 @@
 
 #include "MapScene.h"
 #ifdef __linux__
+#include "Logger.h"
 #include "ThreadPoolSchedulerImpl.h"
 #include "sys/prctl.h"
 #include "sys/resource.h"
@@ -38,12 +39,16 @@ std::shared_ptr<MapInterface> MapInterface::createWithOpenGl(const MapConfig &ma
         ~NopThreadPoolCallbacks() = default;
         std::string getCurrentThreadName() override {
             char name[32] = "";
-            prctl(PR_GET_NAME, name);
+            if (prctl(PR_GET_NAME, name) == -1) {
+                LogError <<= "Couldn't get thread name";
+            }
             return name;
         }
 
         void setCurrentThreadName(const std::string &name) override {
-            prctl(PR_SET_NAME, name.c_str());
+          if (prctl(PR_SET_NAME, name.c_str()) == -1) {
+              LogError <<= "Couldn't set thread name: " + name;
+          }
         }
         void setThreadPriority(TaskPriority priority) override {
           int p = 0;
