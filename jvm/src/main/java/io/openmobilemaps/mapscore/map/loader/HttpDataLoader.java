@@ -32,11 +32,11 @@ import javax.imageio.ImageIO;
  * io.openmobilemaps.mapscore.graphics.BufferedImageTextureHolder} which can load textures for
  * OpenGL.
  */
-public class DataLoader extends LoaderInterface {
-    private static final Logger logger = Logger.getLogger(DataLoader.class.getName());
+public class HttpDataLoader extends LoaderInterface {
+    private static final Logger logger = Logger.getLogger(HttpDataLoader.class.getName());
     protected final HttpClient httpClient;
 
-    public DataLoader() {
+    public HttpDataLoader() {
         httpClient =
                 HttpClient.newBuilder()
                         .followRedirects(HttpClient.Redirect.NORMAL)
@@ -44,7 +44,7 @@ public class DataLoader extends LoaderInterface {
                         .build();
     }
 
-    public DataLoader(HttpClient httpClient) {
+    public HttpDataLoader(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
