@@ -319,10 +319,11 @@ void Tiled2dMapVectorLayer::initializeVectorLayer() {
                                                                                              selfActor,
                                                                                              mapDescription,
                                                                                              rasterSubLayerConfig,
-                                                                                             layerDesc->source,
+                                                                                             layerDesc,
                                                                                              sourceActor.weakActor<Tiled2dMapRasterSource>(),
                                                                                              readyManager,
-                                                                                             featureStateManager);
+                                                                                             featureStateManager,
+                                                                                             mapInterface->getCamera()->getScreenDensityPpi() / 160.0);
                 sourceManagerActor.unsafe()->setAlpha(alpha);
                 sourceTileManagers[layerDesc->source] = sourceManagerActor.strongActor<Tiled2dMapVectorSourceTileDataManager>();
                 sourceInterfaces.push_back(sourceActor.weakActor<Tiled2dMapSourceInterface>());
@@ -419,6 +420,7 @@ void Tiled2dMapVectorLayer::initializeVectorLayer() {
                                                                         symbolDelegate,
                                                                         mapDescription->persistingSymbolPlacement);
             actor.unsafe()->setAlpha(alpha);
+            actor.unsafe()->enableAnimations(animationsEnabled);
             symbolSourceDataManagers[source] = actor;
             interactionDataManagers[source].push_back(actor.weakActor<Tiled2dMapVectorSourceDataManager>());
         }
@@ -1281,6 +1283,15 @@ LayerReadyState Tiled2dMapVectorLayer::isReadyToRenderOffscreen() {
         return LayerReadyState::NOT_READY;
     }
     return Tiled2dMapLayer::isReadyToRenderOffscreen();
+}
+
+void Tiled2dMapVectorLayer::enableAnimations(bool enabled) {
+    this->animationsEnabled = enabled;
+    for (const auto &[source, manager] : symbolSourceDataManagers) {
+        manager.syncAccess([enabled](const std::shared_ptr<Tiled2dMapVectorSourceSymbolDataManager> manager) {
+            manager->enableAnimations(enabled);
+        });
+    }
 }
 
 void Tiled2dMapVectorLayer::setMinZoomLevelIdentifier(std::optional<int32_t> value) {
