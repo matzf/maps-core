@@ -1,5 +1,7 @@
 package io.openmobilemaps.mapscore.graphics.util;
 
+import jdk.incubator.vector.IntVector;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
@@ -73,13 +75,23 @@ public class OSMesa {
     }
 
     private static void flipV(int[] image, int width, int height) {
+        final int lanes = IntVector.SPECIES_PREFERRED.length();
         for(int yTop = 0; yTop < height / 2; ++yTop) {
-            int yBot = height - yTop - 1;
-            for (int x = 0; x < width; ++x) {
-                int tmpTop = image[yTop * width + x];
-                int tmpBot = image[yBot * width + x];
-                image[yTop * width + x] = tmpBot;
-                image[yBot * width + x] = tmpTop;
+            final int yBot = height - yTop - 1;
+            final int yTopOffs = yTop * width;
+            final int yBotOffs = yBot * width;
+            int x = 0;
+            for (; x + lanes < width; x += lanes) {
+                var tmpTop = IntVector.fromArray(IntVector.SPECIES_PREFERRED, image, yTopOffs + x);
+                var tmpBot = IntVector.fromArray(IntVector.SPECIES_PREFERRED, image, yBotOffs + x);
+                tmpTop.intoArray(image, yBotOffs + x);
+                tmpBot.intoArray(image, yTopOffs + x);
+            }
+            for (; x < width; x++) {
+                int tmpTop = image[yTopOffs + x];
+                int tmpBot = image[yBotOffs + x];
+                image[yTopOffs + x] = tmpBot;
+                image[yBotOffs + x] = tmpTop;
             }
         }
     }

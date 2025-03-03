@@ -142,14 +142,17 @@ public class OffscreenMapRendererTest {
 
     @Test
     public void testStyleJsonLabel() {
-        OffscreenMapRenderer renderer = new OffscreenMapRenderer(1200, 800, 4);
+        OffscreenMapRenderer renderer = new OffscreenMapRenderer(2056, 2056, 4);
 
         var map = renderer.getMap();
         addTestStyleLayer(map, "style_geojson_ch_label.json");
         map.getCamera().moveToBoundingBox(bboxCH(), 0.0f, false, null, null);
 
         try {
-            BufferedImage image = renderer.drawFrame(Duration.ofSeconds(1));
+            BufferedImage image=null;
+            for (int i = 0; i < 200; i++) {
+                image = renderer.drawFrame(Duration.ofSeconds(1));
+            }
             assertImageMatchesGolden(image, "testStyleJsonLabel");
         } catch (Exception e) {
             fail(e.getMessage());
