@@ -10,24 +10,21 @@
 
 #pragma once
 
+#include "Actor.h"
+#include "FontLoaderInterface.h"
+#include "InternedString.h"
+#include "SpriteData.h"
 #include "Tiled2dMapLayer.h"
 #include "Tiled2dMapRasterSource.h"
 #include "Tiled2dMapRasterSourceListener.h"
+#include "Tiled2dMapVectorLayerConfig.h"
 #include "Tiled2dMapVectorLayerInterface.h"
+#include "Tiled2dMapVectorLayerLocalDataProviderInterface.h"
 #include "Tiled2dMapVectorSource.h"
 #include "Tiled2dMapVectorSourceListener.h"
-#include "Tiled2dMapVectorSubLayer.h"
-#include "Tiled2dMapVectorTile.h"
-#include "VectorMapSourceDescription.h"
-#include "FontLoaderInterface.h"
-#include "PolygonMaskObject.h"
-#include "Tiled2dMapVectorLayerTileCallbackInterface.h"
-#include "Tiled2dMapLayerMaskWrapper.h"
-#include "TiledLayerError.h"
-#include "Actor.h"
-#include "Tiled2dMapVectorLayerConfig.h"
 #include "Tiled2dMapVectorStateManager.h"
-#include "Tiled2dMapVectorLayerLocalDataProviderInterface.h"
+#include "TiledLayerError.h"
+#include "VectorMapSourceDescription.h"
 #include "VectorSet.h"
 #include <unordered_map>
 
@@ -81,6 +78,7 @@ public:
 
     Tiled2dMapVectorLayer(const std::string &layerName,
                           const std::shared_ptr<VectorMapDescription> & mapDescription,
+                          StringInterner &&stringTable,
                           const std::vector<std::shared_ptr<::LoaderInterface>> & loaders,
                           const std::shared_ptr<::FontLoaderInterface> & fontLoader,
                           const std::optional<Tiled2dMapZoomInfo> &customZoomInfo = std::nullopt,
@@ -228,6 +226,7 @@ public:
     std::vector<Actor<Tiled2dMapRasterSource>> rasterTileSources;
 
     const std::vector<std::shared_ptr<::LoaderInterface>> loaders;
+    StringInterner stringTable;
 
     virtual std::optional<TiledLayerError> loadStyleJson();
     virtual std::optional<TiledLayerError> loadStyleJsonRemotely();
@@ -313,6 +312,7 @@ private:
    std::condition_variable setupCV;
    bool setupReady = false;
    bool animationsEnabled = true;
+
 };
 
 

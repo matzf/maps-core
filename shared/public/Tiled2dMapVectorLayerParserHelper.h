@@ -21,13 +21,15 @@ public:
                                                                    const std::string &styleJsonUrl,
                                                                    const std::shared_ptr<Tiled2dMapVectorLayerLocalDataProviderInterface> &localDataProvider,
                                                                    const std::vector<std::shared_ptr<::LoaderInterface>> &loaders, 
-const std::unordered_map<std::string, std::string> & sourceUrlParams);
+                                                                   StringInterner &stringTable,
+                                                                   const std::unordered_map<std::string, std::string> & sourceUrlParams);
 
     static Tiled2dMapVectorLayerParserResult parseStyleJsonFromString(const std::string &layerName,
                                                                       const std::string &styleJsonString,
                                                                       const std::shared_ptr<Tiled2dMapVectorLayerLocalDataProviderInterface> &localDataProvider,
                                                                       const std::vector<std::shared_ptr<::LoaderInterface>> &loaders, 
-const std::unordered_map<std::string, std::string> & sourceUrlParams);
+                                                                      StringInterner &stringTable,
+                                                                      const std::unordered_map<std::string, std::string> & sourceUrlParams);
 
     static std::string replaceUrlParams(const std::string & url, const std::unordered_map<std::string, std::string> & sourceUrlParams);
 };

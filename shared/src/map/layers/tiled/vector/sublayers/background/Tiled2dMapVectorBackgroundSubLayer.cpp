@@ -28,8 +28,7 @@ void Tiled2dMapVectorBackgroundSubLayer::onAdded(const std::shared_ptr<MapInterf
 
     this->dpFactor = mapInterface->getCamera()->getScreenDensityPpi() / 160.0;
 
-    auto context = std::make_shared<FeatureContext>(vtzero::GeomType::POINT, FeatureContext::mapType{}, 0);
-    auto evalContext = EvaluationContext(0.0, dpFactor, context, featureStateManager);
+    auto evalContext = EvaluationContext(0.0, dpFactor, nullptr, featureStateManager);
 
     bool is3d = mapInterface->is3d();
 
@@ -96,7 +95,7 @@ void Tiled2dMapVectorBackgroundSubLayer::onAdded(const std::shared_ptr<MapInterf
     object->asGraphicsObject()->setDebugLabel(description->identifier);
     polygonObject = std::make_shared<PolygonGroup2dLayerObject>(mapInterface->getCoordinateConverterHelper(), object, shader);
 
-    auto color = description->style.getColor(EvaluationContext(0.0, dpFactor, std::make_shared<FeatureContext>(), featureStateManager));
+    auto color = description->style.getColor(EvaluationContext(0.0, dpFactor, nullptr, featureStateManager));
     polygonObject->setStyles({
         PolygonStyle(color, alpha)
     });
@@ -197,7 +196,7 @@ void Tiled2dMapVectorBackgroundSubLayer::setAlpha(float alpha) {
     Tiled2dMapVectorSubLayer::setAlpha(alpha);
 
     std::lock_guard<std::recursive_mutex> lck(mutex);
-    auto color = description->style.getColor(EvaluationContext(0.0, dpFactor, std::make_shared<FeatureContext>(), featureStateManager));
+    auto color = description->style.getColor(EvaluationContext(0.0, dpFactor, nullptr, featureStateManager));
     polygonObject->setStyles({
         PolygonStyle(color, alpha)
     });

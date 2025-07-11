@@ -10,10 +10,19 @@
 
 #pragma once
 
-#include <string>
+#include "InternedString.h"
 
+// TODO naming...
 class ValueKeys {
 public:
-    const static std::string IDENTIFIER_KEY;
-    const static std::string TYPE_KEY;
+    const static char *IDENTIFIER_KEY_STR;
+    const static char *TYPE_KEY_STR;
+
+    const static InternedString IDENTIFIER_KEY;
+    const static InternedString TYPE_KEY;
+
+    const static InternedString ZOOM;
+
+    // Create a StringInterner derived from the static table reference 
+    static StringInterner newDerivedStringTable();
 };

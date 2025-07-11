@@ -31,7 +31,7 @@ Tiled2dMapVectorPolygonPatternTile::Tiled2dMapVectorPolygonPatternTile(const std
                                                                        const std::shared_ptr<Tiled2dMapVectorStateManager> &featureStateManager)
         : Tiled2dMapVectorTile(mapInterface, tileInfo, description, layerConfig, tileCallbackInterface, featureStateManager),
           spriteData(spriteData), spriteTexture(spriteTexture), usedKeys(description->getUsedKeys()), fadeInPattern(description->style.hasFadeInPattern()) {
-    isStyleZoomDependant = usedKeys.containsUsedKey(Tiled2dMapVectorStyleParser::zoomExpression);
+    isStyleZoomDependant = usedKeys.containsUsedKey(ValueKeys::ZOOM);
     isStyleStateDependant = usedKeys.isStateDependant();
 }
 
@@ -40,7 +40,7 @@ void Tiled2dMapVectorPolygonPatternTile::updateVectorLayerDescription(const std:
     Tiled2dMapVectorTile::updateVectorLayerDescription(description, tileData);
     auto newUsedKeys = description->getUsedKeys();
     bool usedKeysContainsNewUsedKeys = usedKeys.covers(newUsedKeys);
-    isStyleZoomDependant = newUsedKeys.containsUsedKey(Tiled2dMapVectorStyleParser::zoomExpression);
+    isStyleZoomDependant = newUsedKeys.containsUsedKey(ValueKeys::ZOOM);
     isStyleStateDependant = newUsedKeys.isStateDependant();
     usedKeys = std::move(newUsedKeys);
     lastZoom = std::nullopt;
@@ -221,7 +221,7 @@ void Tiled2dMapVectorPolygonPatternTile::setVectorTileData(const Tiled2dMapVecto
                             styleIndex = 0;
                             auto shader = shaderFactory->createPolygonPatternGroupShader(fadeInPattern, mapInterface->is3d());
                             auto polygonDescription = std::static_pointer_cast<PolygonVectorLayerDescription>(description);
-                            shader->asShaderProgramInterface()->setBlendMode(polygonDescription->style.getBlendMode(EvaluationContext(0.0, dpFactor, std::make_shared<FeatureContext>(), featureStateManager)));
+                            shader->asShaderProgramInterface()->setBlendMode(polygonDescription->style.getBlendMode(EvaluationContext(0.0, dpFactor, nullptr, featureStateManager)));
                             shaders.push_back(shader);
                             featureGroups.push_back(std::vector<std::tuple<size_t, std::shared_ptr<FeatureContext>>>{{hash, featureContext}});
                             styleGroupNewPolygonsVector.push_back({{{}, {}}});

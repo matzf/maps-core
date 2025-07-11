@@ -32,9 +32,10 @@ public:
                            const std::unordered_set<std::string> &layersToDecode,
                            const std::string &sourceName,
                            float screenDensityPpi,
-                           std::string layerName);
+                           std::string layerName,
+                           StringInterner &stringTable);
 
-                                                            VectorSet<Tiled2dMapVectorTileInfo> getCurrentTiles();
+    VectorSet<Tiled2dMapVectorTileInfo> getCurrentTiles();
 
     virtual void pause() override;
 
@@ -59,4 +60,6 @@ protected:
     const WeakActor<Tiled2dMapVectorSourceListener> listener;
     
     const std::string sourceName;
+
+    StringInterner &stringTable;
 };

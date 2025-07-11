@@ -24,9 +24,10 @@ Tiled2dMapVectorSource::Tiled2dMapVectorSource(const MapConfig &mapConfig,
                                                const std::unordered_set<std::string> &layersToDecode,
                                                const std::string &sourceName,
                                                float screenDensityPpi,
-                                               std::string layerName)
+                                               std::string layerName,
+                                               StringInterner &stringTable)
         : Tiled2dMapSource<std::shared_ptr<DataLoaderResult>, Tiled2dMapVectorTileInfo::FeatureMap>(mapConfig, layerConfig, conversionHelper, scheduler, screenDensityPpi, tileLoaders.size(), layerName),
-loaders(tileLoaders), layersToDecode(layersToDecode), listener(listener), sourceName(sourceName) {}
+loaders(tileLoaders), layersToDecode(layersToDecode), listener(listener), sourceName(sourceName), stringTable(stringTable) {}
 
 ::djinni::Future<std::shared_ptr<DataLoaderResult>> Tiled2dMapVectorSource::loadDataAsync(Tiled2dMapTileInfo tile, size_t loaderIndex) {
     {
@@ -83,7 +84,7 @@ Tiled2dMapVectorTileInfo::FeatureMap Tiled2dMapVectorSource::postLoadingTask(std
                         }
                     }
 
-                    auto const featureContext = std::make_shared<FeatureContext>(feature);
+                    auto const featureContext = std::make_shared<FeatureContext>(stringTable, feature);
                     PERF_LOG_START(sourceLayerName + "_decode");
                     try {
                         std::shared_ptr<VectorTileGeometryHandler> geometryHandler = std::make_shared<VectorTileGeometryHandler>(tile.bounds, extent, layerConfig->getVectorSettings(), conversionHelper);

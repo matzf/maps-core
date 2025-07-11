@@ -27,7 +27,8 @@ public:
 
 TEST_CASE("TestStyleParser", "[GeoJson inline]") {
     auto jsonString = TestData::readFileToString("style/geojson_style_inline.json");
-    auto result = Tiled2dMapVectorLayerParserHelper::parseStyleJsonFromString("test", jsonString, nullptr, {}, {});
+    StringInterner stringTable = ValueKeys::newDerivedStringTable();
+    auto result = Tiled2dMapVectorLayerParserHelper::parseStyleJsonFromString("test", jsonString, nullptr, {}, stringTable, {});
     REQUIRE(result.mapDescription != nullptr);
     REQUIRE(!result.mapDescription->geoJsonSources.empty());
 
@@ -46,7 +47,8 @@ TEST_CASE("TestStyleParser", "[GeoJson local provider]") {
     auto provider = std::make_shared<TestLocalDataProvider>(std::unordered_map<std::string, std::string>{
         {"wsource", "geojson.geojson"}
     });
-    auto result = Tiled2dMapVectorLayerParserHelper::parseStyleJsonFromString("test", jsonString, provider, {}, {});
+    StringInterner stringTable = ValueKeys::newDerivedStringTable();
+    auto result = Tiled2dMapVectorLayerParserHelper::parseStyleJsonFromString("test", jsonString, provider, {}, stringTable, {});
     REQUIRE(result.mapDescription != nullptr);
     REQUIRE(!result.mapDescription->geoJsonSources.empty());
 
@@ -172,16 +174,18 @@ TEST_CASE("String interpolation expressions") {
             .expectIsInterpolationString = false,
         });
 
-    Tiled2dMapVectorStyleParser parser;
+    StringInterner stringTable = ValueKeys::newDerivedStringTable();
+    Tiled2dMapVectorStyleParser parser(stringTable);
     auto value = parser.parseValue(testCase.expression);
 
     const bool isStringInterpolationValue = (std::dynamic_pointer_cast<StringInterpolationValue>(value) != nullptr);
     REQUIRE(isStringInterpolationValue == testCase.expectIsInterpolationString);
 
-    auto featureContext = std::make_shared<FeatureContext>(vtzero::GeomType::POINT,
+    auto featureContext = std::make_shared<FeatureContext>(stringTable,
+                                                           vtzero::GeomType::POINT,
                                                            FeatureContext::mapType{
-                                                               {"key1", "value1"},
-                                                               {"key2", "VALUE2"},
+                                                               {stringTable.add("key1"), "value1"},
+                                                               {stringTable.add("key2"), "VALUE2"},
                                                            },
                                                            0);
     EvaluationContext context = EvaluationContext(0, 0, featureContext, nullptr);
@@ -235,13 +239,15 @@ TEST_CASE("MaybeGet expressions") {
             .expectedEvaluation = true,
         });
 
-    Tiled2dMapVectorStyleParser parser;
+    StringInterner stringTable = ValueKeys::newDerivedStringTable();
+    Tiled2dMapVectorStyleParser parser(stringTable);
     auto value = parser.parseValue(testCase.expression);
 
-    auto featureContext = std::make_shared<FeatureContext>(vtzero::GeomType::POINT,
+    auto featureContext = std::make_shared<FeatureContext>(stringTable,
+                                                           vtzero::GeomType::POINT,
                                                            FeatureContext::mapType{
-                                                               {"key1", "value1"},
-                                                               {"key2", "VALUE2"},
+                                                               {stringTable.add("key1"), "value1"},
+                                                               {stringTable.add("key2"), "VALUE2"},
                                                            },
                                                            0);
     EvaluationContext context = EvaluationContext(0, 0, featureContext, nullptr);
@@ -285,7 +291,8 @@ TEST_CASE("Step and zoom expressions") {
         }
     );
 
-    Tiled2dMapVectorStyleParser parser;
+    StringInterner stringTable = ValueKeys::newDerivedStringTable();
+    Tiled2dMapVectorStyleParser parser(stringTable);
     auto value = parser.parseValue(testCase.expression);
 
     std::vector<std::pair<double, std::string>> testEvals {
@@ -298,9 +305,10 @@ TEST_CASE("Step and zoom expressions") {
 
     for(auto &[evalInput, expectedOutput] : testEvals) {
         CAPTURE(evalInput);
-        auto featureContext = std::make_shared<FeatureContext>(vtzero::GeomType::POINT,
+        auto featureContext = std::make_shared<FeatureContext>(stringTable,
+                                                               vtzero::GeomType::POINT,
                                                                FeatureContext::mapType{
-                                                                   {"property1", evalInput},
+                                                                   {stringTable.add("property1"), evalInput},
                                                                },
                                                                0);
         EvaluationContext context = EvaluationContext(evalInput, 0, featureContext, nullptr);

@@ -14,13 +14,11 @@
 #include "SymbolVectorLayerDescription.h"
 #include "Value.h"
 #include "SymbolInfo.h"
-#include "StretchShaderInterface.h"
 #include "MapInterface.h"
 #include "Tiled2dMapVectorFontProvider.h"
 #include "Tiled2dMapVectorSymbolLabelObject.h"
 #include "Actor.h"
 #include "SpriteData.h"
-#include "TextLayerObject.h" // TODO: remove usage of TextLayerObject (and File)
 #include "Tiled2dMapVectorLayerConfig.h"
 #include "CollisionGrid.h"
 #include "Vec3D.h"

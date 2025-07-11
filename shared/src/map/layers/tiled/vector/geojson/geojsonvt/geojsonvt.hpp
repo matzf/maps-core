@@ -1,18 +1,17 @@
 #pragma once
 
+#include "clip.hpp"
 #include "convert.hpp"
 #include "tile.hpp"
-#include "clip.hpp"
 
-#include <chrono>
-#include <cmath>
-#include <map>
-#include <unordered_map>
-#include "GeoJsonTypes.h"
 #include "GeoJsonParser.h"
-
-#include "LoaderInterface.h"
+#include "GeoJsonTypes.h"
+#include "InternedString.h"
 #include "LoaderHelper.h"
+#include "LoaderInterface.h"
+
+#include <cmath>
+#include <unordered_map>
 
 struct TileOptions {
     // simplification tolerance (higher means simpler)
@@ -39,28 +38,37 @@ struct Options : TileOptions {
     uint32_t indexMaxPoints = 100000;
 };
 
-inline uint64_t toID(uint8_t z, uint32_t x, uint32_t y) {
-    return (((1ull << z) * y + x) * 32) + z;
-}
+inline uint64_t toID(uint8_t z, uint32_t x, uint32_t y) { return (((1ull << z) * y + x) * 32) + z; }
 
-class GeoJSONVT: public GeoJSONVTInterface, public std::enable_shared_from_this<GeoJSONVT> {
-public:
+class GeoJSONVT : public GeoJSONVTInterface, public std::enable_shared_from_this<GeoJSONVT> {
+  private:
+    StringInterner &stringTable;
+
+  public:
     Options options;
 
     const Tile emptyTile = Tile();
 
     GeoJSONVT(const std::shared_ptr<GeoJson> &geoJson,
-              const Options& options_ = Options())
-    : options(options_), loadingResult(DataLoaderResult(std::nullopt, std::nullopt, LoaderStatus::OK, std::nullopt)) {
+              StringInterner &stringTable,
+              const Options &options_ = Options())
+        : options(options_)
+        , loadingResult(DataLoaderResult(std::nullopt, std::nullopt, LoaderStatus::OK, std::nullopt))
+        , stringTable(stringTable) {
         initialize(geoJson);
     }
 
-    GeoJSONVT(const std::string &sourceName,
-              const std::string &geoJsonUrl,
+    GeoJSONVT(const std::string &sourceName, const std::string &geoJsonUrl,
               const std::vector<std::shared_ptr<::LoaderInterface>> &loaders,
               const std::shared_ptr<Tiled2dMapVectorLayerLocalDataProviderInterface> &localDataProvider,
-              const Options& options_ = Options())
-    : options(options_), sourceName(sourceName), geoJsonUrl(geoJsonUrl), loaders(loaders), localDataProvider(localDataProvider) {}
+              StringInterner &stringTable,
+              const Options &options_ = Options())
+        : options(options_)
+        , sourceName(sourceName)
+        , geoJsonUrl(geoJsonUrl)
+        , loaders(loaders)
+        , localDataProvider(localDataProvider)
+        , stringTable(stringTable) {}
 
     const std::string sourceName;
     const std::string geoJsonUrl;
@@ -75,16 +83,18 @@ public:
         auto weakSelf = weak_from_this();
 
         std::shared_ptr<::djinni::Future<::DataLoaderResult>> jsonLoaderFuture = nullptr;
-        if(localDataProvider && fromLocal) {
-            jsonLoaderFuture = std::make_shared<::djinni::Future<::DataLoaderResult>>(localDataProvider->loadGeojson(sourceName, geoJsonUrl));
+        if (localDataProvider && fromLocal) {
+            jsonLoaderFuture =
+                std::make_shared<::djinni::Future<::DataLoaderResult>>(localDataProvider->loadGeojson(sourceName, geoJsonUrl));
         } else {
-            jsonLoaderFuture = std::make_shared<::djinni::Future<::DataLoaderResult>>(LoaderHelper::loadDataAsync(geoJsonUrl, std::nullopt, loaders));
+            jsonLoaderFuture = std::make_shared<::djinni::Future<::DataLoaderResult>>(
+                LoaderHelper::loadDataAsync(geoJsonUrl, std::nullopt, loaders));
         }
 
-        jsonLoaderFuture->then([weakSelf, fromLocal](auto resultFuture){
-
+        jsonLoaderFuture->then([weakSelf, fromLocal](auto resultFuture) {
             auto self = weakSelf.lock();
-            if (!self) return;
+            if (!self)
+                return;
             auto result = resultFuture.get();
 
             if (result.status != LoaderStatus::OK) {
@@ -93,18 +103,17 @@ public:
                 // if we fail to load from local provider we try to load from remote
                 if (fromLocal) {
                     self->load(false);
-                }
-                else {
+                } else {
                     std::lock_guard<std::recursive_mutex> lock(self->mutex);
                     self->loadingResult = DataLoaderResult(std::nullopt, std::nullopt, result.status, result.errorCode);
                     self->delegate.message(MFN(&GeoJSONTileDelegate::failedToLoad));
                 }
             } else {
-                auto string = std::string((char*)result.data->buf(), result.data->len());
+                auto string = std::string((char *)result.data->buf(), result.data->len());
                 nlohmann::json json;
                 try {
                     json = nlohmann::json::parse(string);
-                    auto geoJson = GeoJsonParser::getGeoJson(json);
+                    auto geoJson = GeoJsonParser::getGeoJson(json, self->stringTable);
                     if (geoJson) {
                         self->initialize(geoJson);
                         std::lock_guard<std::recursive_mutex> lock(self->mutex);
@@ -116,8 +125,7 @@ public:
                             self->delegate.message(MFN(&GeoJSONTileDelegate::didLoad), self->options.maxZoom);
                         }
                     }
-                }
-                catch (nlohmann::json::parse_error &ex) {
+                } catch (nlohmann::json::parse_error &ex) {
                     std::lock_guard<std::recursive_mutex> lock(self->mutex);
                     self->loadingResult = DataLoaderResult(std::nullopt, std::nullopt, LoaderStatus::ERROR_OTHER, "parse error");
                     LogError <<= "Unable to parse geoJson";
@@ -152,15 +160,11 @@ public:
         }
     }
 
-    uint8_t getMinZoom() override {
-        return options.minZoom;
-    }
+    uint8_t getMinZoom() override { return options.minZoom; }
 
-    uint8_t getMaxZoom() override {
-        return options.maxZoom;
-    }
+    uint8_t getMaxZoom() override { return options.maxZoom; }
 
-	void reload(const std::vector<std::shared_ptr<::LoaderInterface>> &loaders) override {
+    void reload(const std::vector<std::shared_ptr<::LoaderInterface>> &loaders) override {
         std::lock_guard<std::recursive_mutex> lock(mutex);
         auto self = shared_from_this();
         self->loadingResult = std::nullopt;
@@ -184,7 +188,6 @@ public:
         splitTile(geoJson->geometries, 0, 0, 0);
     }
 
-
     bool isLoaded() override {
         std::lock_guard<std::recursive_mutex> lock(mutex);
         return loadingResult != std::nullopt && loadingResult->status == LoaderStatus::OK;
@@ -193,13 +196,14 @@ public:
     void waitIfNotLoaded(std::shared_ptr<::djinni::Promise<std::shared_ptr<DataLoaderResult>>> promise) override {
         std::lock_guard<std::recursive_mutex> lock(mutex);
         if (loadingResult) {
-            promise->setValue(std::make_shared<DataLoaderResult>(std::nullopt, std::nullopt, loadingResult->status, loadingResult->errorCode));
+            promise->setValue(
+                std::make_shared<DataLoaderResult>(std::nullopt, std::nullopt, loadingResult->status, loadingResult->errorCode));
         } else {
             waitingPromises.push_back(promise);
         }
     }
 
-    const GeoJSONTileInterface& getTile(const uint8_t z, const uint32_t x_, const uint32_t y) override {
+    const GeoJSONTileInterface &getTile(const uint8_t z, const uint32_t x_, const uint32_t y) override {
         if (z > options.maxZoom)
             throw std::runtime_error("Requested zoom higher than maxZoom: " + std::to_string(z));
 
@@ -217,7 +221,7 @@ public:
             throw std::runtime_error("Parent tile not found");
 
         // if we found a parent tile containing the original geometry, we can drill down from it
-        const auto& parent = it->second;
+        const auto &parent = it->second;
 
         // drill down parent tile up to the requested one
         splitTile(parent.source_features, parent.z, parent.x, parent.y, z, x, y);
@@ -233,7 +237,7 @@ public:
         return emptyTile;
     }
 
-private:
+  private:
     std::unordered_map<uint64_t, InternalTile> tiles;
 
     std::unordered_map<uint64_t, InternalTile>::iterator findParent(const uint8_t z, const uint32_t x, const uint32_t y) {
@@ -254,33 +258,27 @@ private:
         return parent;
     }
 
-    void splitTile(const std::vector<std::shared_ptr<GeoJsonGeometry>> &geometries,
-                   const uint8_t z,
-                   const uint32_t x,
-                   const uint32_t y,
-                   const uint8_t cz = 0,
-                   const uint32_t cx = 0,
-                   const uint32_t cy = 0) {
-        
+    void splitTile(const std::vector<std::shared_ptr<GeoJsonGeometry>> &geometries, const uint8_t z, const uint32_t x,
+                   const uint32_t y, const uint8_t cz = 0, const uint32_t cx = 0, const uint32_t cy = 0) {
+
         const double z2 = 1u << z;
         const uint64_t id = toID(z, x, y);
-        
+
         auto it = tiles.find(id);
-        
+
         if (it == tiles.end()) {
-            const double tolerance =
-            (z == options.maxZoom ? 0 : options.tolerance / (z2 * options.extent));
-            it = tiles.emplace(id, InternalTile{ geometries, z, x, y, options.extent, tolerance}).first;
+            const double tolerance = (z == options.maxZoom ? 0 : options.tolerance / (z2 * options.extent));
+            it = tiles.emplace(id, InternalTile{geometries, z, x, y, options.extent, tolerance}).first;
         }
-        
-        auto& tile = it->second;
-        
+
+        auto &tile = it->second;
+
         if (geometries.empty()) {
             // We need to keep empty tiles, otherwise getTile will throw an error
             return;
         }
 
-        //if it's the first-pass tiling
+        // if it's the first-pass tiling
         if (cz == 0u) {
             // stop tiling if we reached max zoom, or if the tile is too simple
             if (z == options.indexMaxZoom || tile.tile.num_points <= options.indexMaxPoints) {
@@ -291,36 +289,35 @@ private:
             // stop tiling if we reached base zoom
             if (z == options.maxZoom)
                 return;
-            
+
             // stop tiling if it's our target tile zoom
             if (z == cz) {
                 tile.source_features = geometries;
                 return;
             }
-            
+
             // stop tiling if it's not an ancestor of the target tile
             const double m = 1u << (cz - z);
-            if (x != static_cast<uint32_t>(std::floor(cx / m)) ||
-                y != static_cast<uint32_t>(std::floor(cy / m))) {
+            if (x != static_cast<uint32_t>(std::floor(cx / m)) || y != static_cast<uint32_t>(std::floor(cy / m))) {
                 tile.source_features = geometries;
                 return;
             }
         }
-        
+
         const double p = 0.5 * options.buffer / options.extent;
-        const auto& min = tile.bboxMin;
-        const auto& max = tile.bboxMax;
-        
+        const auto &min = tile.bboxMin;
+        const auto &max = tile.bboxMax;
+
         const auto left = clip<0>(geometries, (x - p) / z2, (x + 0.5 + p) / z2, min.x, max.x);
-        
+
         splitTile(clip<1>(left, (y - p) / z2, (y + 0.5 + p) / z2, min.y, max.y), z + 1, x * 2, y * 2, cz, cx, cy);
         splitTile(clip<1>(left, (y + 0.5 - p) / z2, (y + 1 + p) / z2, min.y, max.y), z + 1, x * 2, y * 2 + 1, cz, cx, cy);
-        
+
         const auto right = clip<0>(geometries, (x + 0.5 - p) / z2, (x + 1 + p) / z2, min.x, max.x);
-        
+
         splitTile(clip<1>(right, (y - p) / z2, (y + 0.5 + p) / z2, min.y, max.y), z + 1, x * 2 + 1, y * 2, cz, cx, cy);
         splitTile(clip<1>(right, (y + 0.5 - p) / z2, (y + 1 + p) / z2, min.y, max.y), z + 1, x * 2 + 1, y * 2 + 1, cz, cx, cy);
-        
+
         // if we sliced further down, no need to keep source geometry
         tile.source_features.clear();
 
@@ -332,8 +329,9 @@ private:
 
     void resolveAllWaitingPromises() {
         std::lock_guard<std::recursive_mutex> lock(mutex);
-        for (const auto promise: waitingPromises) {
-            promise->setValue(std::make_shared<DataLoaderResult>(std::nullopt, std::nullopt, loadingResult->status, loadingResult->errorCode));
+        for (const auto promise : waitingPromises) {
+            promise->setValue(
+                std::make_shared<DataLoaderResult>(std::nullopt, std::nullopt, loadingResult->status, loadingResult->errorCode));
         }
         waitingPromises.clear();
     }

@@ -12,6 +12,7 @@
 #include "PolygonCompare.h"
 #include "Tiled2dMapVectorLayer.h"
 #include "Tiled2dMapVectorLayerConstants.h"
+#include "Tiled2dMapVectorTile.h"
 
 Tiled2dMapVectorSourceRasterTileDataManager::Tiled2dMapVectorSourceRasterTileDataManager(const WeakActor<Tiled2dMapVectorLayer> &vectorLayer,
                                                                                          const std::shared_ptr<VectorMapDescription> &mapDescription,
@@ -136,7 +137,7 @@ void Tiled2dMapVectorSourceRasterTileDataManager::onRasterTilesUpdated(const std
                     }
 
                     EvaluationContext evalContext = EvaluationContext(tile.tileInfo.tileInfo.zoomIdentifier, dpFactor,
-                                                                      std::make_shared<FeatureContext>(), featureStateManager);
+                                                                      nullptr, featureStateManager);
                     if (layerDescription->filter != nullptr && !layerDescription->filter->evaluateOr(evalContext, false)) {
                         continue;
                     }
@@ -214,7 +215,7 @@ void Tiled2dMapVectorSourceRasterTileDataManager::updateLayerDescription(std::sh
         std::vector<Actor<Tiled2dMapVectorTile>> tilesToClear;
 
         EvaluationContext evalContext = EvaluationContext(subTiles->first.tileInfo.zoomIdentifier, dpFactor,
-                                                          std::make_shared<FeatureContext>(), featureStateManager);
+                                                            nullptr, featureStateManager);
         if (currentTilesStrippedInfos.find(subTiles->first.tileInfo) == currentTilesStrippedInfos.end() ||
             (layerDescription->filter != nullptr && !layerDescription->filter->evaluateOr(evalContext, false))) {
             for (const auto &[position, id, tile] : subTiles->second) {
@@ -326,7 +327,7 @@ void Tiled2dMapVectorSourceRasterTileDataManager::reloadLayerContent(
             std::vector<Actor<Tiled2dMapVectorTile>> tilesToClear;
 
             EvaluationContext evalContext = EvaluationContext(subTiles->first.tileInfo.zoomIdentifier, dpFactor,
-                                                              std::make_shared<FeatureContext>(), featureStateManager);
+                                                              nullptr, featureStateManager);
             if (currentTilesStrippedInfos.find(subTiles->first.tileInfo) == currentTilesStrippedInfos.end() ||
                 (layerDescription->filter != nullptr && !layerDescription->filter->evaluateOr(evalContext, false))) {
                 for (const auto &[position, id, tile] : subTiles->second) {

@@ -23,7 +23,7 @@ Tiled2dMapVectorLineTile::Tiled2dMapVectorLineTile(const std::weak_ptr<MapInterf
                                                    const std::shared_ptr<Tiled2dMapVectorStateManager> &featureStateManager)
         : Tiled2dMapVectorTile(mapInterface, tileInfo, description, layerConfig, tileCallbackInterface, featureStateManager),
           usedKeys(description->getUsedKeys()), selectionSizeFactor(description->selectionSizeFactor) {
-    isStyleZoomDependant = usedKeys.usedKeys.contains(Tiled2dMapVectorStyleParser::zoomExpression);
+    isStyleZoomDependant = usedKeys.usedKeys.contains(ValueKeys::ZOOM);
     isStyleStateDependant = usedKeys.isStateDependant();
 
     isSimpleLine = description->style.isSimpleLine();
@@ -34,7 +34,7 @@ void Tiled2dMapVectorLineTile::updateVectorLayerDescription(const std::shared_pt
     Tiled2dMapVectorTile::updateVectorLayerDescription(description, tileData);
     auto newUsedKeys = description->getUsedKeys();
     bool usedKeysContainsNewUsedKeys = usedKeys.covers(newUsedKeys);
-    isStyleZoomDependant = newUsedKeys.containsUsedKey(Tiled2dMapVectorStyleParser::zoomExpression);
+    isStyleZoomDependant = newUsedKeys.containsUsedKey(ValueKeys::ZOOM);
     isStyleStateDependant = newUsedKeys.isStateDependant();
     usedKeys = std::move(newUsedKeys);
     lastZoom = std::nullopt;
@@ -356,7 +356,7 @@ void Tiled2dMapVectorLineTile::setVectorTileData(const Tiled2dMapVectorTileDataV
                             styleIndex = 0;
                             auto shader = isSimpleLine ? (is3d ? shaderFactory->createUnitSphereSimpleLineGroupShader() : shaderFactory->createSimpleLineGroupShader()) : (is3d ? shaderFactory->createUnitSphereLineGroupShader() : shaderFactory->createLineGroupShader());
                             auto lineDescription = std::static_pointer_cast<LineVectorLayerDescription>(description);
-                            shader->asShaderProgramInterface()->setBlendMode(lineDescription->style.getBlendMode(EvaluationContext(0.0, dpFactor, std::make_shared<FeatureContext>(), featureStateManager)));
+                            shader->asShaderProgramInterface()->setBlendMode(lineDescription->style.getBlendMode(EvaluationContext(0.0, dpFactor, nullptr, featureStateManager)));
                             shaders.push_back(shader);
                             if (isSimpleLine) {
                                 reusableSimpleLineStyles.push_back({  ShaderSimpleLineStyle {0} });

@@ -35,12 +35,13 @@ public:
                                const std::string &sourceName,
                                float screenDensityPpi,
                                std::shared_ptr<GeoJSONVTInterface> geoJson,
-                               std::string layerName)
+                               std::string layerName,
+                               StringInterner &stringTable)
       : Tiled2dMapVectorSource(mapConfig, layerConfig, conversionHelper, scheduler,
                                // fake loader entry so that Tiled2dMapSource sees one loader; loadDataAsync in this class does not use loader.
                                std::vector<std::shared_ptr<LoaderInterface>>{nullptr},
                                listener, layersToDecode, sourceName,
-                               screenDensityPpi, layerName)
+                               screenDensityPpi, layerName, stringTable)
       , geoJson(geoJson)
       , camera(camera) {}
 
